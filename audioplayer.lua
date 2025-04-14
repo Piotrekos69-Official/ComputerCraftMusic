@@ -3,23 +3,18 @@ local decoder = dfpwm.make_decoder()
 
 local url = "https://raw.githubusercontent.com/Piotrekos69-Official/ComputerCraftMusic/refs/heads/main/mJjKg4p0.wav"
 
--- Zmienna czasu buforowania (w sekundach)
+-- Sekundy buforowania
 local bufferSeconds = 3
-
--- Domyślna jakość WAV (CraftOS używa zazwyczaj 48000 Hz)
-local sampleRate = 48000
-
--- Ile bajtów WAV pobierzemy (przy mono i 1 byte/sample)
+local sampleRate = 48000  -- Hz
 local bytesToBuffer = bufferSeconds * sampleRate
 
--- Pobieranie WAV
+-- Pobierz WAV do RAM
 local response = http.get(url, nil, true)
 if not response then
-    print("Nie udało się połączyć!")
+    print("Błąd pobierania!")
     return
 end
 
--- Buforowanie danych
 local rawData = ""
 while #rawData < bytesToBuffer do
     local chunk = response.read(math.min(8192, bytesToBuffer - #rawData))
@@ -28,25 +23,34 @@ while #rawData < bytesToBuffer do
 end
 response.close()
 
--- Dekodowanie WAV do DFPWM
-local buffer = decoder(rawData)
+-- Dekoduj do DFPWM (jeden wielki buffer)
+local decoded = decoder(rawData)
 
--- Znalezienie wszystkich głośników
+-- Znajdź głośniki
 local speakers = {peripheral.find("speaker")}
 if #speakers == 0 then
-    print("Brak podłączonych głośników!")
+    print("Brak głośników!")
     return
 end
 
--- Wysyłanie do wszystkich głośników synchronicznie
-local tasks = {}
-for _, speaker in pairs(speakers) do
-    table.insert(tasks, function()
-        while not speaker.playAudio(buffer) do
-            os.pullEvent("speaker_audio_empty")
-        end
-    end)
-end
+-- Ustaw rozmiar porcji (musi być <= 16 KB)
+local chunkSize = 16 * 1024
 
--- Graj synchronicznie!
-parallel.waitForAll(table.unpack(tasks))
+-- Odtwarzaj po kawałkach
+local i = 1
+while i <= #decoded do
+    local chunk = string.sub(decoded, i, i + chunkSize - 1)
+
+    -- Graj synchronicznie na wszystkich głośnikach
+    local tasks = {}
+    for _, speaker in pairs(speakers) do
+        table.insert(tasks, function()
+            while not speaker.playAudio(chunk) do
+                os.pullEvent("speaker_audio_empty")
+            end
+        end)
+    end
+
+    parallel.waitForAll(table.unpack(tasks))
+    i = i + chunkSize
+end
