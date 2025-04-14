@@ -1,25 +1,33 @@
 local dfpwm = require("cc.audio.dfpwm")
 local decoder = dfpwm.make_decoder()
-local speaker = peripheral.find("speaker")
+local speakers = {peripheral.find("speaker")}
 
--- Tu podaj adres WAV z internetu
-local wavUrl = "https://raw.githubusercontent.com/Piotrekos69-Official/ComputerCraftMusic/main/Toby-Fox-Megalovania%20(1).wav"
+-- Link do pliku WAV
+local url = "https://remote.craftos-pc.cc/music/content/s88IU8_Y.wav"
 
--- Pobierz dane strumieniowo z internetu
-local request = http.get(wavUrl, nil, true)
-if not request then
-    print("Błąd: Nie można połączyć się z URL")
+-- Pobieranie przez HTTP
+local handle = http.get(url, nil, true)
+if not handle then
+    print("Nie udało się połączyć z URL!")
     return
 end
 
 while true do
-    local chunk = request.read(16 * 1024)
+    local chunk = handle.read(16 * 1024)
     if not chunk then break end
 
     local buffer = decoder(chunk)
-    while not speaker.playAudio(buffer) do
-        os.pullEvent("speaker_audio_empty")
+
+    local play_tasks = {}
+    for _, speaker in pairs(speakers) do
+        table.insert(play_tasks, function()
+            while not speaker.playAudio(buffer) do
+                os.pullEvent("speaker_audio_empty")
+            end
+        end)
     end
+
+    parallel.waitForAll(table.unpack(play_tasks))
 end
 
-request.close()
+handle.close()
