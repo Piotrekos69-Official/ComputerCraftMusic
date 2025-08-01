@@ -1,40 +1,18 @@
--- Lista kolorów (maksymalnie 16)
-local colorsList = {
-  colors.red, colors.orange, colors.yellow, colors.lime,
-  colors.green, colors.cyan, colors.blue, colors.purple,
-  colors.magenta, colors.pink, colors.brown, colors.lightBlue,
-  colors.lightGray, colors.gray, colors.black, colors.white
-}
+local function drawFloor()
+    term.clear()
+    term.setCursorPos(1, 1)
 
--- Do którego urządzenia rysować (np. term, peripheral)
-local mon = term
--- Jeśli chcesz rysować na monitorze, odkomentuj linię poniżej:
--- mon = peripheral.wrap("right") -- zmień "right" na stronę monitora
+    for y = 1, 3 do
+        for x = 1, 3 do
+            term.setBackgroundColor(colors.blue)
+            term.setCursorPos((x - 1) * 4 + 1, (y - 1) * 2 + 1)
+            term.write("   ")
+            term.setCursorPos((x - 1) * 4 + 1, (y - 1) * 2 + 2)
+            term.write("   ")
+        end
+    end
 
--- Funkcja rysująca kwadrat 3x3
-local function drawSquare(x, y, color)
-  mon.setBackgroundColor(color)
-  for dy = 0, 2 do
-    mon.setCursorPos(x, y + dy)
-    mon.write("   ")
-  end
+    term.setBackgroundColor(colors.black)
 end
 
--- Wyczyść ekran
-mon.setTextScale(0.5)
-mon.setBackgroundColor(colors.black)
-mon.clear()
-
--- Rozmiar ekranu
-local w, h = mon.getSize()
-
--- Rysuj siatkę kolorowych kwadratów
-local x, y = 1, 1
-for i = 1, #colorsList do
-  drawSquare(x, y, colorsList[i])
-  x = x + 4
-  if x + 2 > w then
-    x = 1
-    y = y + 4
-  end
-end
+drawFloor()
