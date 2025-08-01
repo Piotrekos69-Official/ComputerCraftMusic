@@ -34,4 +34,7 @@ for i = 1, #colorsList do
   drawSquare(x, y, colorsList[i])
   x = x + 4
   if x + 2 > w then
-    x =
+    x = 1
+    y = y + 4
+  end
+end
