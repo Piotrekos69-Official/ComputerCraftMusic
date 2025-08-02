@@ -1,18 +1,26 @@
-local function drawFloor()
-    term.clear()
-    term.setCursorPos(1, 1)
+-- Attach the monitor peripheral
+local mon = peripheral.wrap("left") -- Change to correct side
+mon.setTextScale(0.5)
 
-    for y = 1, 3 do
-        for x = 1, 3 do
-            term.setBackgroundColor(colors.blue)
-            term.setCursorPos((x - 1) * 4 + 1, (y - 1) * 2 + 1)
-            term.write("   ")
-            term.setCursorPos((x - 1) * 4 + 1, (y - 1) * 2 + 2)
-            term.write("   ")
-        end
+-- Get size
+local width, height = mon.getSize()
+
+-- Color palette (change/add colors as you like)
+local colorsList = {
+  colors.red, colors.orange, colors.yellow, colors.green,
+  colors.blue, colors.purple, colors.cyan, colors.pink,
+  colors.lime, colors.lightBlue
+}
+
+-- Main loop
+while true do
+  for y = 1, height do
+    for x = 1, width do
+      local bg = colorsList[math.random(1, #colorsList)]
+      mon.setBackgroundColor(bg)
+      mon.setCursorPos(x, y)
+      mon.write(" ")
     end
-
-    term.setBackgroundColor(colors.black)
+  end
+  sleep(0.2)
 end
-
-drawFloor()
